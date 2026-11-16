@@ -1,3 +1,14 @@
+## Unreleased
+
+### Fixed
+
+- A glass surface that comes back on screen — a page uncovered, a tab or an
+  `IndexedStack` child shown again — paints its content instead of re-adding
+  the layer it kept. A repaint boundary inside it that asked for a frame while
+  the page was away (an `Opacity`, a spinner's `RepaintBoundary`) was left
+  dirty with its layer on screen and swallowed every later `markNeedsPaint`,
+  so the content stopped updating until the surface itself repainted.
+
 ## 0.4.0 - 2026-10-24
 
 ### Breaking changes

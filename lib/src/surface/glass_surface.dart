@@ -752,7 +752,18 @@ class RenderGlassSurface extends RenderProxyBox implements GlassSurfaceGeometry 
       return;
     }
     final OffsetLayer? kept = _contentLayer.layer;
-    if (kept != null && !_contentDirty && _contentOffset == offset) {
+    // Re-added only on a repaint in place, with this surface's own layer in
+    // the tree — which is what a publish is. A surface painted while its layer
+    // is out of the tree is coming back on screen: a page uncovered, a tab or
+    // an `IndexedStack` child shown again. Whatever below it asked for a frame
+    // while it was away was marked by `_skippedPaintingOnLayer`, which sets
+    // `_needsPaint` on the boundaries above it without `markNeedsPaint`, so
+    // [_contentDirty] never heard of it; only the descent the framework
+    // expects reaches it. Re-adding the kept layer instead strands a nested
+    // boundary — a `RepaintBoundary`, an `Opacity` — with its flag set, and
+    // every `markNeedsPaint` it makes after that returns early: the content
+    // stops updating until something repaints this surface itself.
+    if (kept != null && !_contentDirty && _contentOffset == offset && (this.layer?.attached ?? false)) {
       context.addLayer(kept);
       return;
     }
